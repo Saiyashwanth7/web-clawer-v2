@@ -18,7 +18,7 @@ A production-grade async web crawler built with FastAPI and PostgreSQL. Accepts 
 ## Project Structure
 
 ```
-UnderstandingMixRank/
+web-clawer-v2/
 ├── main.py          # FastAPI app, endpoints, background task runner
 ├── crawler.py       # BFS crawl logic, aiohttp + Playwright fetchers
 ├── extractors.py    # extract_links() and extract_images()
@@ -38,8 +38,8 @@ UnderstandingMixRank/
 ### 1. Clone and create virtual environment
 
 ```bash
-git clone https://github.com/yourusername/UnderstandingMixRank.git
-cd UnderstandingMixRank
+git clone https://github.com/Saiyashwanth7/web-clawer-v2.git
+cd web-crawler-v2
 python -m venv venv
 venv\Scripts\activate        # Windows
 # source venv/bin/activate   # Mac/Linux
@@ -58,9 +58,6 @@ Create a `.env` file in the project root:
 
 ```env
 DATABASE_URL=postgresql://your_user:your_password@localhost:5432/your_db
-MAX_CONCURRENT_REQUESTS=10
-MAX_PAGES=50
-REQUEST_TIMEOUT=10
 ```
 
 ### 4. Run the server
@@ -94,7 +91,7 @@ Request body:
 Response:
 ```json
 {
-  "job_id": "656a9196",
+  "job_id": "656a9196", 
   "status": "started",
   "pages_crawled": 0,
   "images_found": 0,
