@@ -61,9 +61,6 @@ Create a `.env.docker` file in your project root:
 
 ```env
 DATABASE_URL=postgresql://postgres:your_password@db:5432/MiniWebCrawler
-MAX_CONCURRENT_REQUESTS=10
-MAX_PAGES=50
-REQUEST_TIMEOUT=10
 ```
 
 > Note: the host is `db`, not `localhost` — inside Docker, `db` is the service name of the PostgreSQL container resolved automatically by Docker's internal DNS.
@@ -147,9 +144,6 @@ Create a `.env` file in the project root:
 
 ```env
 DATABASE_URL=postgresql://your_user:your_password@localhost:5432/your_db
-MAX_CONCURRENT_REQUESTS=10
-MAX_PAGES=50
-REQUEST_TIMEOUT=10
 ```
 
 #### Step 5 — Run the server
