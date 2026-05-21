@@ -6,4 +6,4 @@ sqlalchemy==2.0.23
 asyncpg==0.29.0
 pydantic-settings==2.0.0
 python-dotenv==1.0.0
-playwright==1.40.0
+playwright==1.44.0

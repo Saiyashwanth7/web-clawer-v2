@@ -7,6 +7,7 @@ class CrawlRequest(BaseModel):
     max_pages: int = 50
     use_playwright: bool = True
     respect_robots: bool = True
+    force_recrawl: bool = False
 
 class CrawlJobResponse(BaseModel):
     job_id: str

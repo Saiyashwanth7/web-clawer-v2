@@ -24,9 +24,24 @@ from urllib.parse import urlparse
 # actually this is pretty much of an undirected Graph traversal problem where we use BFS with visited set()
 # This only covers limited number of pages(we set max_pages = 50 for the testing).
 
-import asyncio
-from playwright.sync_api import sync_playwright
+"""import asyncio
+from playwright.sync_api import sync_playwright"""
 
+
+async def fetch_with_playwright(url: str):
+    try:
+        async with async_playwright() as p:
+            browser = await p.chromium.launch(headless=True)
+            page = await browser.new_page()
+            await page.goto(url, timeout=15000)
+            await page.wait_for_load_state("networkidle", timeout=10000)
+            html = await page.content()
+            await browser.close()
+            return html, 200, "playwright"
+    except Exception as e:
+        print(f"Exception in playwright: {e}")
+        return None, None, None
+"""
 async def fetch_with_playwright(url: str):
     loop = asyncio.get_event_loop()
     return await loop.run_in_executor(None, _sync_playwright_fetch, url)
@@ -45,7 +60,7 @@ def _sync_playwright_fetch(url: str):
         print(f"Exception in playwright: {e}")
         return None, None, None
 
-"""async def fetch_with_playwright(url):
+async def fetch_with_playwright(url):
     async with async_playwright() as p:
         try:
             browser = await p.chromium.launch(headless=True)
@@ -107,9 +122,12 @@ async def crawl(job_id: str, seed_url: str, db: AsyncSession):
                 print(f"Blocked by robots.txt: {url}")
                 continue
             html, status, method = await fetch_with_aiohttp(url, session, sem)
+            print(f"aiohttp result: html length={len(html) if html else 0}")
             if not html or is_content_empty(html):
+                print(f"is_content_empty: {is_content_empty(html) if html else 'html is None'}")
                 print(f"Switching to playwright for {url}")
                 html, status, method = await fetch_with_playwright(url)
+                print(f"playwright result: html length={len(html) if html else 0}")
 
 
             if not html:

@@ -1,9 +1,3 @@
-import asyncio
-import sys
-
-if sys.platform == "win32":
-    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
-
 import uuid
 from fastapi import FastAPI, BackgroundTasks, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,9 +7,10 @@ from database import get_db, engine, Base,AsyncSessionLocal
 from models import CrawlJob, CrawledPage, ExtractedImage
 from schemas import CrawlRequest, CrawlJobResponse
 from crawler import crawl
+from urllib.parse import urlparse
 
 
-async def background_crawling(job_id:str,url:str,db:AsyncSession):
+async def background_crawling(job_id:str,url:str):
     async with AsyncSessionLocal() as db:
         await crawl(job_id,url,db)
         
@@ -40,12 +35,29 @@ async def start_crawl(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db)
 ):
+    # Check if this exact seed URL was already crawled
+    result = await db.execute(
+    select(CrawlJob).where(CrawlJob.seed_url == str(request.url))
+    )
+    existing_job = result.scalars().first()
+
+    if existing_job and not request.force_recrawl:
+        return CrawlJobResponse(
+            job_id=existing_job.id,
+            status=existing_job.status,
+            pages_crawled=existing_job.pages_crawled,
+            images_found=existing_job.images_found,
+            seed_url=existing_job.seed_url,
+            created_at=existing_job.created_at
+        )
+
     job_id = str(uuid.uuid4())[:8]
     job = CrawlJob(id=job_id, seed_url=str(request.url))
     db.add(job)
     await db.commit()
+    await db.refresh(job)
 
-    background_tasks.add_task(background_crawling, job_id, str(request.url), db)
+    background_tasks.add_task(background_crawling, job_id, str(request.url))
 
     return CrawlJobResponse(
         job_id=job_id,
@@ -81,9 +93,9 @@ async def get_results(job_id: str, db: AsyncSession = Depends(get_db)):
         "pages": [{"url": p.url, "status": p.status_code, "method": p.fetch_method} for p in pages]
     }
 
-@app.get("/images/{job_id}")
+@app.get("/unique_images/{job_id}")
 async def get_images(job_id: str, logo_only: bool = False, db: AsyncSession = Depends(get_db)):
-    query = select(ExtractedImage, CrawledPage.url).join(CrawledPage).where(CrawledPage.job_id == job_id)
+    query = select(ExtractedImage, CrawledPage.url).join(CrawledPage).where(CrawledPage.job_id == job_id).distinct(ExtractedImage.image_url)
     if logo_only:
         query = query.where(ExtractedImage.is_logo == True)
     result = await db.execute(query)
